@@ -12,7 +12,7 @@
       register: app_process_check
 
     - name: Decision point to start patching
-      fail: msg="{{ inventory_hostname }} are running application. Plesae stop the application first, prior to patching
+      fail: msg="{{ inventory_hostname }} are running application. Plesae stop the application first, prior to patching"
       when: app_process_check.stdout == "process_running"
       
     - name: Install wget and Linux firmware
@@ -26,54 +26,50 @@
         - "wget https://www.elrepo.org/RPM-GPG-KEY-elrepo.org"
         - "wget http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm"
         - "rpm -ivh elrepo-release-7.0-2.el7.elrepo.noarch.rpm"
-     register: epel_out
-     ignore_errors: yes
-     when: app_process_check.stdout == 'process_not_running' and "{{ ansible_os_family }}" == 'RedHat' 
+      register: epel_out
+      ignore_errors: yes
+      when: app_process_check.stdout == 'process_not_running' and "{{ ansible_os_family }}" == 'RedHat' 
 
-   - name: Upgrade all packages including Kernel
-     yum: 
-       name: "*"
-       state: latest
-     when: app_process_check.stdout == 'process_not_running' and "{{ ansible_os_family }}" == 'RedHat'
-     register: yum_update
+    - name: Upgrade all packages including Kernel
+      yum: 
+        name: "*"
+        state: latest
+      when: app_process_check.stdout == 'process_not_running' and "{{ ansible_os_family }}" == 'RedHat'
+      register: yum_update
 
-   - name: check if reboot require after kernel update
-     shell: KERNEL_NEW=$(rpm -qa -last kernel | head -1 | awk '{print $1}' | sed 's/kernel-//'); KERNEL_NOW=$(uname -r); if [[ $KERNEL_NEW != $KERNEL_NOW ]]; then echo "reboot_needed";fi
-     ignore_errors: true
-     register: reboot_required
+    - name: check if reboot require after kernel update
+      shell: KERNEL_NEW=$(rpm -qa -last kernel | head -1 | awk '{print $1}' | sed 's/kernel-//'); KERNEL_NOW=$(uname -r); if [[ $KERNEL_NEW != $KERNEL_NOW ]]; then echo "reboot_needed";fi
+      ignore_errors: true
+      register: reboot_required
 
-   - name: restart systemc
-     command: shutdown -r +1 "rebooting System after Patching"
-     async: 0
-     poll: 0
-     when: reboot_required.stdout == "reboot_needed"
-     register: reboot_started
+    - name: restart systemc
+      command: shutdown -r +1 "rebooting System after Patching"
+      async: 0
+      poll: 0
+      when: reboot_required.stdout == "reboot_needed"
+      register: reboot_started
      
-   - name: Pause for 180 secs
-     pause: 
-       minutes: 3
+    - name: Pause for 180 secs
+      pause: 
+        minutes: 3
 
-   - name: Check if sysem responding to SSH
-     local_action: 
+    - name: Check if sysem responding to SSH
+      local_action: 
                  wait_for=yes
                  host={{ inventory_hostname }}
                  port=22
                  timeout=300
                  state=started
-     when: reboot_started | changed
+      when: reboot_started | changed
 
-   - name: New kernel 
-     shell: uname -r
-     register: new_kernel
+    - name: New kernel 
+      shell: uname -r
+      register: new_kernel
   
-   - name: Old kernel 
-     debug: msg=Old Kernel was {{ old_kernel.stdout}}
+    - name: Old kernel 
+      debug: msg=Old Kernel was {{ old_kernel.stdout}}
  
-   - debug: msg=NEW Kernel is {{ new_kernel.stdout }}
+    - debug: msg=NEW Kernel is {{ new_kernel.stdout }}
    
              
      
-     
-   
-     
-  

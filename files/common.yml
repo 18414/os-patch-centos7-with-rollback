@@ -1,0 +1,10 @@
+---
+- hosts: "{{ my_host }}"
+  become: true
+  vars_prompt: 
+    - name: service_name
+      prompt: please enter the service name which should be stop prior to patching
+      private: no
+  
+  roles: 
+    - os-patch-centos7-with-rollback

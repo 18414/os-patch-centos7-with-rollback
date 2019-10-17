@@ -1,2 +1,10 @@
 ---
 # tasks file for os-patch-centos7-with-rollback
+
+- import_tasks: centos7-patch.yml 
+  tags: patch
+
+- import_tasks: patch_rollback.yml
+  tags: rollback
+
+
