@@ -1,0 +1,31 @@
+---
+- name: RUN rollback script 
+  script: update_rollback.sh
+  
+- name: Restart systemc
+  command: shutdown -r +1 "Rebooting System After patching"
+  async: 0
+  poll: 0
+  register: postrollback_started
+  ignore_errors: true
+
+- name: Pause for 180 sec
+  pause: 
+    minutes: 3
+
+- name: Check if system responding to SSH
+  local_action: 
+    module: wait_for
+      host={{ inventory_hostname }}
+      port=22
+      delay=15
+      timeout=300 
+      state=started
+  when: postrollback_started | changed
+
+- name: Check if undo kernel
+  debug: msg=OLD Kernle is back{{ undo_ker.stdout }}
+
+              
+  
+  

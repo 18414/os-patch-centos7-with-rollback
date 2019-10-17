@@ -1,12 +1,4 @@
 ---
-- host: "{{ my-host }}"
-  become: true
-  serial: 1
-  vars_prompt: 
-    name: service_name
-    prompt: please enter the service name which should be stop prior to patching
-    private: no
-  tasks: 
     - name: Old kernel version  
       shell: uname -r
       register: old_kernel
